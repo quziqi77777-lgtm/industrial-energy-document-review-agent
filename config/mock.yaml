@@ -1,0 +1,40 @@
+# Mock 配置：不调真实 LLM，全靠 regex 兜底
+# 用法：python -m src.cli audit <doc> --config config/mock.yaml
+
+llm:
+  provider: mock
+  text_model: mock-text
+  vision_model: mock-vision
+  reasoning_model: mock-text
+  default_temperature: 0.0
+  explorer_a_temperature: 0.2
+  explorer_b_temperature: 0.0
+  mock:
+    text_response: "{}"   # LLM 返回空 JSON → agent 走 regex 兜底
+    vision_response: "{}"
+
+paths:
+  data_dir: ./data
+  db_path: ./data/audit.db
+  docs_dir: ./data/docs
+  images_dir: ./data/images
+  results_dir: ./data/results
+  fixtures_dir: ./tests/fixtures
+
+parse:
+  doc_to_docx_timeout: 60
+  pdf_scan_text_threshold: 50
+  ocr_enabled: false
+
+chunk:
+  max_tokens: 800
+  table_inline_rows: 10
+  anchor_text_length: 30
+
+retrieve:
+  fts_top_k: 3
+  use_jieba: true
+
+audit:
+  per_doc_timeout: 240
+  batch_concurrency: 5

@@ -1,0 +1,55 @@
+# Industry Agent 默认配置
+# 模型可插拔：替换为更大模型时只改这里，业务代码不动
+
+llm:
+  # provider 选择：api（OpenAI-compatible，对接 vLLM/ollama/远端）或 mock（测试用）
+  provider: api
+
+  # OpenAI-compatible API 配置
+  api:
+    base_url: http://localhost:8000/v1
+    api_key: EMPTY  # vLLM 默认不验证 key
+    timeout: 120
+    max_retries: 2
+
+  # 默认模型（起步用小模型，后期可换 72B / VL-72B）
+  # model 字段必须与 vLLM `--served-model-name` 完全一致
+  text_model: Qwen3-1.7B-Instruct
+  vision_model: Qwen3-VL-4B-Instruct
+  reasoning_model: Qwen3-1.7B-Instruct  # Critic 暂用同一个；后期换更大的
+
+  # 生成参数
+  default_temperature: 0.0
+  explorer_a_temperature: 0.2
+  explorer_b_temperature: 0.0
+
+# 路径
+paths:
+  data_dir: ./data
+  db_path: ./data/audit.db
+  docs_dir: ./data/docs
+  images_dir: ./data/images
+  results_dir: ./data/results
+  fixtures_dir: ./tests/fixtures
+
+# 文档解析
+parse:
+  doc_to_docx_timeout: 60        # LibreOffice 转换超时（秒）
+  pdf_scan_text_threshold: 50    # PDF 单页文字少于此值视为扫描件
+  ocr_enabled: false             # 默认关闭 PaddleOCR（按需开启）
+
+# 切块
+chunk:
+  max_tokens: 800                # 单个 text chunk 上限
+  table_inline_rows: 10          # ≤ 此行数的表保留在父 chunk
+  anchor_text_length: 30         # anchor_text 取前 N 字符用于批注定位
+
+# 检索
+retrieve:
+  fts_top_k: 3                   # 标准条款检索 top-k
+  use_jieba: true                # FTS5 索引前用 jieba 分词
+
+# 审核
+audit:
+  per_doc_timeout: 240           # 单文档软目标延迟（秒）
+  batch_concurrency: 5           # 批量处理并发上限

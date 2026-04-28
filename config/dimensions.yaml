@@ -1,0 +1,161 @@
+# 赛题维度定义（按赛题评分表对齐）
+# 每个维度声明：所属场景、调用方式（rule/llm/llm+rule）、关联标准
+
+scenario_1:  # 作业指导书
+
+  C1_structure:
+    name: 结构完整性
+    method: rule          # 目录覆盖、章节编号、附录索引可全规则化
+    standards: [QSY1217, GBT1.1]
+    description: 目录覆盖核心模块；章节编号(1.1.1分级)；附录配套；目录页码与正文一致
+
+  C2_content_completeness:
+    name: 内容完整性
+    method: llm           # 与 C3/C4/C5 合并 1 次 LLM 调用一次性输出 4 项
+    merged_with: [C3_language, C4_reference, C5_logic]
+    standards: [TSG31, GBT21246, QSY1217]
+    description: 技术参数正确；引用标准是最新版本；岗位职责含安全环保；应急流程合理
+
+  C3_language:
+    name: 文字及语法错误
+    method: llm
+    merged_with: [C2_content_completeness, C4_reference, C5_logic]
+    standards: [GBT1.1]
+    description: 语句通顺；标点规范；缩略词首次出现注释
+
+  C4_reference:
+    name: 引用文件可追溯
+    method: llm
+    merged_with: [C2_content_completeness, C3_language, C5_logic]
+    standards: [GBT1.1, QSY1217]
+    description: 附件及涉及标准真实存在、有效；正文-附录交叉验证
+
+  C5_logic:
+    name: 业务逻辑错误
+    method: llm
+    merged_with: [C2_content_completeness, C3_language, C4_reference]
+    standards: [QSY1217]
+    description: 全文逻辑连贯；时间/图片/附件与文字表述对应
+
+  E1_staffing:
+    name: 人员配备
+    method: rule_then_llm  # 规则公式判定，LLM 做数字抽取
+    standards: [QSY1217]
+    description: |
+      公式：
+      - 每 100 公里设置 1 名安全工程师（CEILING）
+      - 天然气管道每 30 公里 1 区段；输油管道每 20 公里 1 区段；每区段 1 专职区段长
+      - 每 3-10 公里配 1 名管道巡线工
+
+  E2_emergency:
+    name: 应急处置
+    method: llm
+    standards: [QSY1217, AQ3057]
+    description: 应急流程合理；现场处置方案与附录描述一致（处置顺序）
+
+  T1_template:
+    name: 模板使用
+    method: rule
+    description: 是否使用规定模板（封面要素、版本号、签字栏）
+
+  T2_compatibility:
+    name: 格式兼容
+    method: rule
+    description: 必须支持 WORD + PDF（含扫描件）
+
+  T3_efficiency:
+    name: 识别效率
+    method: rule
+    description: 单份审核耗时分档：≤60s / ≤120s / ≤180s / >240s
+
+scenario_2:  # 高后果区一区一案
+
+  I1_signature:
+    name: 签字页手签识别
+    method: vision
+    image_types: [approval]
+    description: 识别签字页手写签名 + 日期；时序：编制 ≤ 审核 ≤ 批准
+
+  I2_required_images:
+    name: 必备图完整性
+    method: rule           # 按高后果区类型校验图齐全
+    description: |
+      人员密集型：影像图 + 现场图 + 入场线路 + 逃生路线 + 集合点 + 应急物资点
+      环境敏感型：影像图 + 现场图 + 入场线路 + 应急物资点
+      水体敏感型：高后果区围油设施图
+
+  I3_aerial:
+    name: 影像图标注
+    method: vision
+    image_types: [hca_aerial]
+    description: 管道实线 + 影响半径虚线 + 周边建筑标注（含人员/名称）
+
+  I4_entry_route:
+    name: 入场线路标注
+    method: vision
+    image_types: [entry_route]
+    description: 路线不能穿山/穿墙/无桥跨河/穿建筑物/不在可行车道
+
+  I5_evacuation:
+    name: 逃生路线 + 集结点
+    method: vision
+    image_types: [evacuation_route, assembly_point]
+    description: 疏散方向应向管道两侧；集结点在影响半径外
+
+  I6_water_containment:
+    name: 水体敏感图
+    method: vision
+    image_types: [water_containment]
+    description: 围油设施防止位置标注（仅环境敏感性高后果区）
+
+  I7_municipal_crossing:
+    name: 市政管网交叉图
+    method: vision
+    image_types: [municipal_crossing]
+    description: 市政管网交叉位置标注 + 文字说明（仅人员密集型/城区管道）
+
+  I8_image_text_consistency:
+    name: 图文一致性
+    method: rule_then_llm
+    description: 高后果区特征描述部分对建筑物的描述与影像图标注一致
+
+  L1_context_consistency:
+    name: 上下文内容一致
+    method: rule
+    description: 区段长姓名、位置、高后果区编号在多处一致
+
+  L2_standards:
+    name: 标准遵从度
+    method: rule
+    description: 是否参照 GB32167（高后果区识别标准）
+
+  L3_required_sections:
+    name: 必备章节完整
+    method: rule
+    description: 必备章节齐全（同 I2 但聚焦文字部分）
+
+  L4_time_sequence:
+    name: 时间逻辑一致
+    method: rule
+    description: 编制时间 ≥ 风险评价时间 ≥ 识别时间，且年份一致
+
+  L5_data_logic:
+    name: 数据逻辑正确
+    method: rule
+    description: 电位测试 -0.85V ~ -1.2V；风险等级 ∈ {低,中,较高,高}；风险评价数据为数值
+
+  L6_text_template:
+    name: 文字模板一致
+    method: rule_then_llm
+    description: 管道本体管控/外部环境风险管控/事故状态下前期处置 三大块描述与模板一致或包含
+
+# 标准库路由（每个维度需要加载哪些标准）
+DIMENSION_STANDARDS:
+  C1_structure: [QSY1217, GBT1.1]
+  C2_content_completeness: [TSG31, GBT21246, QSY1217]
+  C3_language: [GBT1.1]
+  C4_reference: [GBT1.1, QSY1217]
+  C5_logic: [QSY1217]
+  E1_staffing: [QSY1217]
+  E2_emergency: [QSY1217, AQ3057]
+  L2_standards: [GB32167]
